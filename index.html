@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Conversation Annotator - Demo</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+:root {
+--primary-color: #2196F3;
+--success-color: #4CAF50;
+--warning-color: #FFC107;
+--error-color: #F44336;
+--text-primary: #333;
+--text-secondary: #666;
+--border-color: #e0e0e0;
+--background-light: #f5f5f5;
+--panel-width: 50%;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+font-family: 'Inter', sans-serif;
+background: var(--background-light);
+color: var(--text-primary);
+line-height: 1.6;
+height: 100vh;
+overflow: hidden;
+}
+
+.main-interface {
+display: flex;
+flex-direction: column;
+height: 100vh;
+overflow: hidden;
+}
+
+.app-header {
+background: white;
+padding: 15px 30px;
+box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+display: flex;
+justify-content: space-between;
+align-items: center;
+z-index: 10;
+}
+
+.header-controls {
+display: flex;
+align-items: center;
+gap: 20px;
+}
+
+.demo-badge {
+background: #ff9800;
+color: white;
+padding: 5px 15px;
+border-radius: 20px;
+font-size: 0.85em;
+font-weight: 600;
+}
+
+.content-container {
+display: flex;
+flex: 1;
+overflow: hidden;
+}
+
+.conversation-panel,
+.annotation-panel {
+width: var(--panel-width);
+display: flex;
+flex-direction: column;
+overflow: hidden;
+}
+
+.conversation-panel {
+border-right: 1px solid var(--border-color);
+}
+
+.panel-header {
+padding: 20px;
+background: white;
+border-bottom: 1px solid var(--border-color);
+display: flex;
+justify-content: space-between;
+align-items: center;
+}
+
+.conversation-display {
+flex: 1;
+overflow-y: auto;
+padding: 20px;
+background: white;
+}
+
+.conversation-info {
+display: flex;
+gap: 20px;
+align-items: center;
+}
+
+.message {
+padding: 12px;
+margin: 8px 0;
+border-radius: 8px;
+max-width: 85%;
+}
+
+.message-header {
+font-size: 0.85em;
+color: var(--text-secondary);
+margin-bottom: 5px;
+}
+
+.customer {
+background: #e3f2fd;
+margin-left: auto;
+border-left: 4px solid var(--primary-color);
+}
+
+.bot {
+background: #f0f4c3;
+margin-right: auto;
+border-left: 4px solid #9e9d24;
+}
+
+.navigation-controls {
+padding: 15px;
+background: white;
+border-top: 1px solid var(--border-color);
+display: flex;
+justify-content: space-between;
+align-items: center;
+gap: 15px;
+}
+
+.progress-bar-container {
+flex: 1;
+max-width: 300px;
+}
+
+.progress {
+height: 8px;
+background-color: #f0f0f0;
+border-radius: 4px;
+overflow: hidden;
+}
+
+.buckets-container {
+flex: 1;
+overflow-y: auto;
+padding: 20px;
+background: white;
+}
+
+.bucket {
+background: #f8f9fa;
+border-radius: 8px;
+padding: 12px 15px;
+margin-bottom: 10px;
+transition: all 0.2s ease;
+border: 2px solid transparent;
+}
+
+.bucket:hover {
+background: #e9ecef;
+}
+
+.bucket.checked {
+border-color: var(--primary-color);
+background: #e3f2fd;
+}
+
+.bucket-label {
+display: flex;
+align-items: center;
+gap: 10px;
+font-weight: 500;
+cursor: pointer;
+user-select: none;
+}
+
+.bucket-label input[type="checkbox"] {
+width: 18px;
+height: 18px;
+cursor: pointer;
+}
+
+.bucket-comment {
+max-height: 0;
+overflow: hidden;
+transition: max-height 0.3s ease, margin-top 0.3s ease, opacity 0.3s ease;
+opacity: 0;
+}
+
+.bucket-comment.open {
+max-height: 400px;
+margin-top: 10px;
+opacity: 1;
+}
+
+.bucket textarea {
+width: 100%;
+padding: 10px;
+border: 1px solid var(--border-color);
+border-radius: 4px;
+resize: vertical;
+min-height: 80px;
+font-family: inherit;
+transition: all 0.2s ease;
+}
+
+.bucket select.hva-dropdown {
+width: 100%;
+padding: 8px;
+border: 1px solid var(--border-color);
+border-radius: 4px;
+font-family: inherit;
+transition: all 0.2s ease;
+}
+
+.bucket select.hva-dropdown:focus,
+.bucket textarea:focus {
+border-color: var(--primary-color);
+outline: none;
+box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
+}
+
+.radio-group {
+display: flex;
+flex-direction: column;
+gap: 10px;
+padding: 5px 0;
+}
+
+.radio-option {
+display: flex;
+align-items: center;
+gap: 8px;
+padding: 8px 12px;
+border-radius: 6px;
+cursor: pointer;
+transition: all 0.2s ease;
+background: white;
+border: 1px solid var(--border-color);
+}
+
+.radio-option:hover {
+background: #f8f9fa;
+border-color: var(--primary-color);
+}
+
+.radio-option input[type="radio"] {
+width: 16px;
+height: 16px;
+cursor: pointer;
+margin: 0;
+}
+
+.radio-option input[type="radio"]:checked + span {
+font-weight: 600;
+color: var(--primary-color);
+}
+
+.radio-option span {
+user-select: none;
+}
+
+.status-message {
+position: fixed;
+bottom: 20px;
+right: 20px;
+padding: 12px 24px;
+border-radius: 4px;
+background: white;
+box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+display: none;
+z-index: 1000;
+animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+from { transform: translateY(100%); opacity: 0; }
+to { transform: translateY(0); opacity: 1; }
+}
+
+@media (max-width: 992px) {
+.content-container {
+flex-direction: column;
+}
+.conversation-panel,
+.annotation-panel {
+width: 100%;
+height: 50vh;
+}
+.conversation-panel {
+border-right: none;
+border-bottom: 1px solid var(--border-color);
+}
+}
+</style>
+</head>
+<body>
+
+<div class="main-interface">
+<header class="app-header">
+<div style="display: flex; align-items: center; gap: 15px;">
+<h1>Conversation Annotator</h1>
+<span class="demo-badge">DEMO MODE</span>
+</div>
+<div class="header-controls">
+<span id="progress-text">0/0 Conversations</span>
+<button id="download-btn" class="btn btn-primary" disabled title="Download disabled in demo">📥 Download</button>
+</div>
+</header>
+
+<div class="content-container">
+<div class="conversation-panel">
+<div class="panel-header">
+<h2>Conversation</h2>
+<div class="conversation-info" id="conversation-info"></div>
+</div>
+<div class="conversation-display" id="conversation-display"></div>
+<div class="navigation-controls">
+<button id="prev-btn" class="btn btn-outline-primary">◀ Previous</button>
+<div class="progress-bar-container">
+<div class="progress">
+<div id="progress" class="progress-bar" role="progressbar"></div>
+</div>
+</div>
+<button id="next-btn" class="btn btn-outline-primary">Next ▶</button>
+</div>
+</div>
+
+<div class="annotation-panel">
+<div class="panel-header">
+<h2>Annotations</h2>
+<button id="save-btn" class="btn btn-success">💾 Save</button>
+</div>
+<div class="buckets-container" id="bucket-area"></div>
+</div>
+</div>
+</div>
+
+<div id="status-message" class="status-message"></div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+
+// Sample demo data
+const demoConversations = [
+{
+Id: 'CONV-001',
+conversations: [
+{ llmGeneratedUserMessage: 'How do I add a new user to my business account?', botMessage: 'You can add users by going to Account Settings > User Management > Add User. You\'ll need admin privileges.' },
+{ llmGeneratedUserMessage: 'Can I set different permission levels?', botMessage: 'Yes! You can set permissions as Admin, Buyer, or Viewer when adding users.' }
+],
+feedback: 'Positive'
+},
+{
+Id: 'CONV-002',
+conversations: [
+{ llmGeneratedUserMessage: 'Where is my order #12345?', botMessage: 'Let me check that for you. Your order is currently in transit and expected to arrive tomorrow.' },
+{ llmGeneratedUserMessage: 'Can I change the delivery address?', botMessage: 'Unfortunately, once shipped, the address cannot be modified. Please contact customer service for alternatives.' }
+],
+feedback: 'Negative'
+},
+{
+Id: 'CONV-003',
+conversations: [
+{ llmGeneratedUserMessage: 'What HVA features are available?', botMessage: 'We offer 3-Way Match, Analytics, Business Lists, Custom Quotes, Guided Buying, and more!' },
+{ llmGeneratedUserMessage: 'Tell me about 3-Way Match', botMessage: '3-Way Match helps you verify that purchase orders, receipts, and invoices all align before payment.' }
+],
+feedback: 'Positive'
+}
+];
+
+const tool = {
+currentIndex: 0,
+conversations: demoConversations,
+annotations: {},
+buckets: [
+"Bot Response",
+"HVA",
+"AB feature/HVA Related Query",
+"Personalized/Account-Specific Queries",
+"Promo & Freebie Related Queries",
+"Help-page/Direct Customer Service",
+"BP for Non-Profit Organisation Related Query",
+"Personal Prime Related Query",
+"Customer Behavior",
+"Other Queries",
+"Overall Observations"
+],
+bucketStaticComments: {
+"AB feature/HVA Related Query": [
+"HVA Related Query"
+],
+"Personalized/Account-Specific Queries": [
+"Account Status",
+"Account Specific",
+"Order Related Issue",
+"Pre-order Query",
+"Personalised query",
+"Order Tracking Issue"
+],
+"Help-page/Direct Customer Service": [
+"Customer's Direct Ask",
+"Bot recommendations"
+],
+"BP for Non-Profit Organisation Related Query": [
+"Non profit organisation query"
+],
+"Personal Prime Related Query": [
+"Amazon Prime Details"
+],
+"Customer Behavior": [
+"Negative feedback despite correct bot response"
+],
+"Other Queries": [
+"Customer annoyed by bot's pop-up",
+"Customer query not understandable",
+"Unrelated to Amazon",
+"Outside Bot's knowledge base but within Amazon Business",
+"Other query"
+]
+},
+hvaOptions: [
+"3WM (3-Way Match)",
+"Account Authority",
+"Add User",
+"Analytics",
+"ATEP (Amazon Tax Exemption Program)",
+"Business Lists",
+"Business Order Information",
+"Custom Quotes",
+"Guided Buying",
+"PBI",
+"Quantity Discount",
+"Shared Settings",
+"SSO",
+"Subscibe & Save (formerly Recurring Delivery)"
+]
+};
+
+const elements = {
+conversationDisplay: document.getElementById('conversation-display'),
+conversationInfo: document.getElementById('conversation-info'),
+bucketArea: document.getElementById('bucket-area'),
+prevBtn: document.getElementById('prev-btn'),
+nextBtn: document.getElementById('next-btn'),
+saveBtn: document.getElementById('save-btn'),
+downloadBtn: document.getElementById('download-btn'),
+progress: document.getElementById('progress'),
+progressText: document.getElementById('progress-text'),
+statusMessage: document.getElementById('status-message')
+};
+
+function createBucketUI() {
+tool.buckets.forEach(bucket => {
+let contentHTML = '';
+
+if (bucket === "Bot Response") {
+contentHTML = `
+<div class="radio-group">
+<label class="radio-option">
+<input type="radio" name="${bucket}-option" value="Accurate Response">
+<span>Accurate response</span>
+</label>
+<label class="radio-option">
+<input type="radio" name="${bucket}-option" value="Inaccurate Response">
+<span>Inaccurate response</span>
+</label>
+</div>
+`;
+} else if (bucket === "HVA") {
+contentHTML = `
+<select class="form-select hva-dropdown" name="${bucket}-select">
+<option value="">Select HVA type...</option>
+${tool.hvaOptions.map(option => `<option value="${option}">${option}</option>`).join('')}
+</select>
+`;
+} else if (tool.bucketStaticComments[bucket]) {
+contentHTML = `
+<select class="form-select hva-dropdown" name="${bucket}-select">
+<option value="">Select comment...</option>
+${tool.bucketStaticComments[bucket].map(option => `<option value="${option}">${option}</option>`).join('')}
+</select>
+<textarea placeholder="Add sub-comment after hyphen (optional)" name="${bucket}-subcomment" rows="2" style="margin-top: 10px;"></textarea>
+`;
+} else {
+contentHTML = `<textarea placeholder="Add comments for ${bucket}" name="${bucket}" rows="3"></textarea>`;
+}
+
+const bucketHTML = `
+<div class="bucket" data-bucket="${bucket}">
+<label class="bucket-label">
+<input type="checkbox" name="${bucket}">
+<span>${bucket}</span>
+</label>
+<div class="bucket-comment">${contentHTML}</div>
+</div>
+`;
+elements.bucketArea.insertAdjacentHTML('beforeend', bucketHTML);
+});
+}
+
+function displayConversation() {
+const conv = tool.conversations[tool.currentIndex];
+
+elements.conversationInfo.innerHTML = `
+<div class="info-item">
+<strong>ID:</strong> ${conv.Id}
+</div>
+<div class="info-item">
+<strong>Feedback:</strong> 
+<span class="badge ${conv.feedback === 'Negative' ? 'bg-danger' : 'bg-success'}">
+${conv.feedback}
+</span>
+</div>
+`;
+
+let html = '<div class="messages">';
+conv.conversations.forEach(message => {
+if (message.llmGeneratedUserMessage) {
+html += `
+<div class="message customer">
+<div class="message-header">👤 Customer</div>
+${message.llmGeneratedUserMessage}
+</div>
+`;
+}
+if (message.botMessage) {
+html += `
+<div class="message bot">
+<div class="message-header">🤖 Bot</div>
+${message.botMessage}
+</div>
+`;
+}
+});
+html += '</div>';
+
+elements.conversationDisplay.innerHTML = html;
+updateProgressBar();
+loadAnnotations();
+}
+
+function updateProgressBar() {
+const progress = ((tool.currentIndex + 1) / tool.conversations.length) * 100;
+elements.progress.style.width = `${progress}%`;
+elements.progressText.textContent = `${tool.currentIndex + 1}/${tool.conversations.length} Conversations`;
+}
+
+function saveCurrentAnnotations() {
+const convId = tool.conversations[tool.currentIndex].Id;
+const hasAnnotations = tool.buckets.some(bucket =>
+document.querySelector(`input[name="${bucket}"]`).checked
+);
+
+if (!hasAnnotations) {
+showStatus('⚠️ Please select at least one bucket', 'warning');
+return;
+}
+
+tool.annotations[convId] = {};
+tool.buckets.forEach(bucket => {
+const checkbox = document.querySelector(`input[name="${bucket}"]`);
+if (checkbox.checked) {
+if (bucket === "Bot Response") {
+const selectedRadio = document.querySelector(`input[name="${bucket}-option"]:checked`);
+tool.annotations[convId][bucket] = selectedRadio ? selectedRadio.value : '';
+} else if (bucket === "HVA") {
+const dropdown = document.querySelector(`select[name="${bucket}-select"]`);
+tool.annotations[convId][bucket] = dropdown ? dropdown.value : '';
+} else if (tool.bucketStaticComments[bucket]) {
+const dropdown = document.querySelector(`select[name="${bucket}-select"]`);
+const subcomment = document.querySelector(`textarea[name="${bucket}-subcomment"]`);
+const staticValue = dropdown ? dropdown.value : '';
+const subValue = subcomment ? subcomment.value.trim() : '';
+                    
+if (staticValue && subValue) {
+tool.annotations[convId][bucket] = `${staticValue} - ${subValue}`;
+} else {
+tool.annotations[convId][bucket] = staticValue;
+}
+} else {
+const textarea = document.querySelector(`textarea[name="${bucket}"]`);
+tool.annotations[convId][bucket] = textarea.value.trim();
+}
+}
+});
+
+showStatus('✅ Annotations saved!', 'success');
+console.log('Current annotations:', tool.annotations);
+}
+
+function loadAnnotations() {
+const convId = tool.conversations[tool.currentIndex].Id;
+const savedAnnotations = tool.annotations[convId] || {};
+
+tool.buckets.forEach(bucket => {
+const bucketDiv = document.querySelector(`[data-bucket="${bucket}"]`);
+const checkbox = bucketDiv.querySelector('input[type="checkbox"]');
+const commentDiv = bucketDiv.querySelector('.bucket-comment');
+
+checkbox.checked = false;
+commentDiv.classList.remove('open');
+bucketDiv.classList.remove('checked');
+
+if (bucket === "Bot Response") {
+const radios = bucketDiv.querySelectorAll('input[type="radio"]');
+radios.forEach(radio => radio.checked = false);
+} else if (bucket === "HVA") {
+const dropdown = bucketDiv.querySelector('select');
+if (dropdown) dropdown.value = '';
+} else if (tool.bucketStaticComments[bucket]) {
+const dropdown = bucketDiv.querySelector('select');
+const subcomment = bucketDiv.querySelector('textarea');
+if (dropdown) dropdown.value = '';
+if (subcomment) subcomment.value = '';
+} else {
+const textarea = bucketDiv.querySelector('textarea');
+if (textarea) textarea.value = '';
+}
+});
+
+Object.entries(savedAnnotations).forEach(([bucket, value]) => {
+const bucketDiv = document.querySelector(`[data-bucket="${bucket}"]`);
+if (bucketDiv) {
+const checkbox = bucketDiv.querySelector('input[type="checkbox"]');
+const commentDiv = bucketDiv.querySelector('.bucket-comment');
+
+checkbox.checked = true;
+commentDiv.classList.add('open');
+bucketDiv.classList.add('checked');
+
+if (bucket === "Bot Response") {
+const radio = bucketDiv.querySelector(`input[type="radio"][value="${value}"]`);
+if (radio) radio.checked = true;
+} else if (bucket === "HVA") {
+const dropdown = bucketDiv.querySelector('select');
+if (dropdown) dropdown.value = value;
+} else if (tool.bucketStaticComments[bucket]) {
+const dropdown = bucketDiv.querySelector('select');
+const subcomment = bucketDiv.querySelector('textarea');
+                    
+if (value.includes(' - ')) {
+const [staticPart, subPart] = value.split(' - ', 2);
+if (dropdown) dropdown.value = staticPart;
+if (subcomment) subcomment.value = subPart;
+} else {
+if (dropdown) dropdown.value = value;
+}
+} else {
+const textarea = bucketDiv.querySelector('textarea');
+if (textarea) textarea.value = value;
+}
+}
+});
+}
+
+function showStatus(message, type) {
+elements.statusMessage.textContent = message;
+elements.statusMessage.className = `status-message alert alert-${type}`;
+elements.statusMessage.style.display = 'block';
+setTimeout(() => {
+elements.statusMessage.style.display = 'none';
+}, 3000);
+}
+
+elements.bucketArea.addEventListener('change', (e) => {
+if (e.target.type === 'checkbox') {
+const bucketDiv = e.target.closest('.bucket');
+const commentDiv = bucketDiv.querySelector('.bucket-comment');
+const input = bucketDiv.querySelector('textarea, select, input[type="radio"]');
+
+if (e.target.checked) {
+commentDiv.classList.add('open');
+bucketDiv.classList.add('checked');
+setTimeout(() => input?.focus(), 300);
+} else {
+commentDiv.classList.remove('open');
+bucketDiv.classList.remove('checked');
+
+const bucket = bucketDiv.getAttribute('data-bucket');
+if (bucket === "Bot Response") {
+const radios = bucketDiv.querySelectorAll('input[type="radio"]');
+radios.forEach(radio => radio.checked = false);
+} else if (bucket === "HVA") {
+const select = bucketDiv.querySelector('select');
+if (select) select.value = '';
+} else if (tool.bucketStaticComments[bucket]) {
+const select = bucketDiv.querySelector('select');
+const textarea = bucketDiv.querySelector('textarea');
+if (select) select.value = '';
+if (textarea) textarea.value = '';
+} else {
+const textarea = bucketDiv.querySelector('textarea');
+if (textarea) textarea.value = '';
+}
+}
+}
+});
+
+elements.prevBtn.addEventListener('click', () => {
+if (tool.currentIndex > 0) {
+tool.currentIndex--;
+displayConversation();
+} else {
+showStatus('⚠️ This is the first conversation', 'warning');
+}
+});
+
+elements.nextBtn.addEventListener('click', () => {
+if (tool.currentIndex < tool.conversations.length - 1) {
+tool.currentIndex++;
+displayConversation();
+} else {
+showStatus('⚠️ This is the last conversation', 'warning');
+}
+});
+
+elements.saveBtn.addEventListener('click', saveCurrentAnnotations);
+
+document.addEventListener('keydown', (e) => {
+if (e.key === 'ArrowLeft') {
+elements.prevBtn.click();
+} else if (e.key === 'ArrowRight') {
+elements.nextBtn.click();
+} else if (e.key === 's' && (e.ctrlKey || e.metaKey)) {
+e.preventDefault();
+elements.saveBtn.click();
+}
+});
+
+createBucketUI();
+displayConversation();
+
+console.log('Demo tool loaded with sample data! 🚀');
+console.log('Try: Navigate with arrow keys, check boxes, save annotations');
+
+});
+</script>
+
+</body>
+</html>
